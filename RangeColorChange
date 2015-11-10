@@ -1,0 +1,19 @@
+'this micro  change the color of Cell A1 such that  if 0<x<5 green , 5<x<10 Yellow, and 10<x<15 Red , else white
+Private Sub Worksheet_Change(ByVal Target As Range)
+        
+    If Target.Address = "$A$1" Then
+        If ((Range("A1").Value < 5 And Range("A1").Value > 0) Or Range("A1").Value = 0) Then
+            Range("A1").Interior.ColorIndex = 4   'Green
+        ElseIf ((Range("A1").Value < 10 And Range("A1").Value > 5) Or Range("A1").Value = 5) Then
+            Range("A1").Interior.ColorIndex = 6   'Yellow
+        ElseIf ((Range("A1").Value < 15 And Range("A1").Value > 10) Or Range("A1").Value = 10) Then
+            Range("A1").Interior.ColorIndex = 3   'Red
+        Else
+            Range("A1").Interior.ColorIndex = 2   'white
+        End If
+        
+        If Range("A1").Value = "" Then
+            Range("A1").Interior.ColorIndex = 2   'white
+        End If
+    End If
+End Sub
