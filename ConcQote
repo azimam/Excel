@@ -1,0 +1,11 @@
+'This code add qoute around cell content
+'this is usefull when a datagrid(clearscada) is paste in excel and modifed
+'to inset the modified excel to a datagrid , a doube qoute is needed around the cell content
+Sub Conc()
+    For Each cell In Sheets("Sheet1").UsedRange
+            If cell.Value <> "" Then
+                 cell.Value = Chr(34) & cell.Value & Chr(34)
+            End If
+       Next cell
+
+End Sub
