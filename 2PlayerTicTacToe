@@ -1,0 +1,125 @@
+' this macro is a two player Tic Tac Toe Game in excel , the Game is set in Range E6 To G8, 
+' the plyer X's score and O's Score are shown in range J6 and J7
+' and whos turn is shown in E10 
+
+Dim ifX As Boolean
+Dim CountGmae As Integer
+Dim ScoreX, ScoreO As Integer
+
+
+Private Sub Worksheet_SelectionChange(ByVal Target As Range)
+    
+    If Target.Cells.Count <> 1 Then Exit Sub
+    If Target.Row < 6 Then Exit Sub
+    If Target.Row > 8 Then Exit Sub
+    If Target.Column < 5 Then Exit Sub
+    If Target.Column > 7 Then Exit Sub
+    If Target.Cells.Value <> "" Then Exit Sub
+    If ifX = False Then
+        Range("E10").Value = " Player X's Turn"
+        ifX = True
+        Target.Cells.Value = "O"
+   Else
+        Range("E10").Value = " Player O's Turn"
+        ifX = False
+        Target.Cells.Value = "X"
+    End If
+    Call Score
+End Sub
+
+Private Sub CommandButton1_Click()
+        Reset
+        CountGmae = 0
+        ifX = True
+        Range("E10").Value = " Player X's Turn"
+End Sub
+Private Sub CommandButton2_Click()
+    newGame
+    CountGmae = CountGmae + 1
+    If (CountGmae Mod 2) = 0 Then
+        ifX = True
+        Range("E10").Value = " Player X's Turn"
+    Else
+        ifX = False
+        Range("E10").Value = " Player O's Turn"
+        End If
+End Sub
+
+Private Sub Score()
+    For i = 6 To 8
+        If Cells(i, 5).Value = "X" And Cells(i, 6).Value = "X" And Cells(i, 7).Value = "X" Then
+            
+            Cells(i, 5).Interior.ColorIndex = 20
+            Cells(i, 6).Interior.ColorIndex = 20
+            Cells(i, 7).Interior.ColorIndex = 20
+            Range("J6").Value = Range("J6").Value + 1
+            MsgBox "PlayerX Won"
+         End If
+    Next i
+    For i = 5 To 7
+        If Cells(6, i).Value = "X" And Cells(7, i).Value = "X" And Cells(8, i).Value = "X" Then
+            
+            Cells(6, i).Interior.ColorIndex = 20
+            Cells(7, i).Interior.ColorIndex = 20
+            Cells(8, i).Interior.ColorIndex = 20
+            Range("J6").Value = Range("J6").Value + 1
+            MsgBox "PlayerX Won"
+         End If
+    Next i
+    If Cells(6, 5).Value = "X" And Cells(7, 6).Value = "X" And Cells(8, 7).Value = "X" Then
+            
+            Cells(6, 5).Interior.ColorIndex = 20
+            Cells(7, 6).Interior.ColorIndex = 20
+            Cells(8, 7).Interior.ColorIndex = 20
+            Range("J6").Value = Range("J6").Value + 1
+            MsgBox "PlayerX Won"
+    End If
+    
+    
+    
+    For i = 6 To 8
+        If Cells(i, 5).Value = "O" And Cells(i, 6).Value = "O" And Cells(i, 7).Value = "O" Then
+            
+            Cells(i, 5).Interior.ColorIndex = 20
+            Cells(i, 6).Interior.ColorIndex = 20
+            Cells(i, 7).Interior.ColorIndex = 20
+            Range("J7").Value = Range("J7").Value + 1
+            MsgBox "PlayerO Won"
+         End If
+    Next i
+    For i = 5 To 7
+        If Cells(6, i).Value = "O" And Cells(7, i).Value = "O" And Cells(8, i).Value = "O" Then
+            
+            Cells(6, i).Interior.ColorIndex = 20
+            Cells(7, i).Interior.ColorIndex = 20
+            Cells(8, i).Interior.ColorIndex = 20
+            Range("J7").Value = Range("J7").Value + 1
+            MsgBox "PlayerO Won"
+         End If
+    Next i
+    If Cells(6, 5).Value = "O" And Cells(7, 6).Value = "O" And Cells(8, 7).Value = "O" Then
+            
+            Cells(6, 5).Interior.ColorIndex = 20
+            Cells(7, 6).Interior.ColorIndex = 20
+            Cells(8, 7).Interior.ColorIndex = 20
+            Range("J7").Value = Range("J7").Value + 1
+            MsgBox "PlayerO Won"
+    End If
+End Sub
+
+Sub Reset()
+  Range("E6:G8").ClearContents
+  Range("E6:G8").Interior.ColorIndex = 2
+  Range("J6:J7").Value = 0
+
+End Sub
+ 
+Sub newGame()
+    Range("E6:G8").ClearContents
+    Range("E6:G8").Interior.ColorIndex = 2
+End Sub
+
+
+
+
+
