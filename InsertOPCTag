@@ -1,0 +1,77 @@
+Sub InsterOPCTagtoExcel()
+'
+' This Micro is written to Connect to the server and
+' bring FullName and TagName of OPC digital and
+' Analog point to the Excel Sheet
+'
+Dim SiteName As String
+SiteName = Range("I3").Value
+If Range("I3").Value = "" Then
+        'Server connection failed.
+        MsgBox ("Please Enter The Site Name.")
+        Range("I3").Select
+        Exit Sub
+    End If
+'
+    If Not (Range("A3").Value = "") Then
+        Columns("A:E").EntireColumn.ClearContents
+    End If
+    With ActiveSheet.ListObjects.Add(SourceType:=0, Source:= _
+        "ODBC;Driver={ClearSCADA Driver};LOCATION=ClearScada;UID=flowdata;;LOCALTIME=False;", _
+        Destination:=Range("$A$3")).QueryTable
+        .CommandText = Array( _
+        "SELECT COpcAlgPoint.FullName, COpcAlgPoint.TagName" & Chr(13) & "" & Chr(10) & "FROM Opc.COpcAlgPoint COpcAlgPoint" & Chr(13) & "" & Chr(10) & "WHERE (COpcAlgPoint.FullName Like '%" & SiteName & "%')" & Chr(13) & "" & Chr(10) & "ORDER BY COpcAlgPoint.FullName" _
+        )
+        .RowNumbers = False
+        .FillAdjacentFormulas = False
+        .PreserveFormatting = True
+        .RefreshOnFileOpen = False
+        .BackgroundQuery = True
+        .RefreshStyle = xlInsertDeleteCells
+        .SavePassword = False
+        .SaveData = True
+        .AdjustColumnWidth = True
+        .RefreshPeriod = 0
+        .PreserveColumnInfo = True
+        .ListObject.DisplayName = "Table_Query_from_clearscada"
+        .Refresh BackgroundQuery:=False
+    End With
+    Columns("A:A").EntireColumn.AutoFit
+    Columns("B:B").EntireColumn.AutoFit
+    Range("D3").Select
+    
+    ''''''''''''''''''''''''''''''''''''''''
+
+    With ActiveSheet.ListObjects.Add(SourceType:=0, Source:= _
+        "ODBC;Driver={ClearSCADA Driver};LOCATION=ClearScada;LOCALTIME=False;", _
+        Destination:=Range("$D$3")).QueryTable
+        .CommandText = Array( _
+        "SELECT COpcDigitalPoint.FullName, COpcDigitalPoint.TagName" & Chr(13) & "" & Chr(10) & "FROM Opc.COpcDigitalPoint COpcDigitalPoint" & Chr(13) & "" & Chr(10) & "WHERE (COpcDigitalPoint.FullName Like '%REX%')" & Chr(13) & "" & Chr(10) & "ORDER BY COpcDigitalPoint.FullName" _
+        )
+        .RowNumbers = False
+        .FillAdjacentFormulas = False
+        .PreserveFormatting = True
+        .RefreshOnFileOpen = False
+        .BackgroundQuery = True
+        .RefreshStyle = xlInsertDeleteCells
+        .SavePassword = False
+        .SaveData = True
+        .AdjustColumnWidth = True
+        .RefreshPeriod = 0
+        .PreserveColumnInfo = True
+        .ListObject.DisplayName = "Table_Query_from_clearscada_1"
+        .Refresh BackgroundQuery:=False
+    End With
+    Columns("D:D").EntireColumn.AutoFit
+    Columns("E:E").EntireColumn.AutoFit
+End Sub
+
+Sub Reset()
+ 'Worksheets("Update Points").UsedRange.Cells.Interior.Color = -4142
+ 'Worksheets("Update Points").UsedRange.ClearContents
+ Worksheets("Update Points").Columns("A:E").EntireColumn.Interior.Color = -4142
+ Worksheets("Update Points").Columns("A:E").EntireColumn.ClearContents
+ Worksheets("Update Points").Range("I3").Value = ""
+End Sub
+
+
