@@ -1,0 +1,36 @@
+
+Sub InsertTag()
+Dim oSvr, obj, i, Name
+Dim iRowNumber, iRowNumber2 As Double
+    'Set oSvr = New ScxV6Server
+     Set oSvr = CreateObject("Serck.ScxV6Server")
+     oSvr.Connect "ClearScada", "flowdata", "flowdata"
+    If oSvr Is Nothing Then
+        'Server connection failed.
+        MsgBox ("Connection to SCX server failed.")
+        Exit Sub
+    End If
+    If Worksheets("Update Points").Range("A4") = "" Then
+       MsgBox ("Please Insert the OPC Points to the Excel Sheet")
+        Exit Sub
+    End If
+        
+''''Create a reference to the point.
+    
+    iRowNumber = 4
+
+    'Iterate through the file until the end is reached.
+    While Not Worksheets("Update Points").Cells(iRowNumber, 1) = ""
+           Set obj = oSvr.FindObject(Worksheets("Update Points").Cells(iRowNumber, 1))
+                If obj Is Nothing Then
+                    MsgBox "Please ensure the point full name entered is valid.", vbOKOnly, "Invalid Point"
+                    Exit Sub
+                End If
+           obj.interface.TagName = Worksheets("Update Points").Cells(iRowNumber, 2)
+        
+           iRowNumber = iRowNumber + 1
+    Wend
+    
+  
+    MsgBox "Analog Tags are loaded.", vbOKOnly, "Done"
+End Sub
