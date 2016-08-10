@@ -1,0 +1,212 @@
+Private Sub CommandButton1_Click()
+Dim oSvr, oTemplate, oInstance, obj, iRow, Name, wInstance, wTemplate
+Dim sPath, sSiteTemplatePath, sWellTemplatePath, sInstancePath, sSiteInstanceName As String
+Dim sSepTemplatePath, sTankTemplatePath, sFlareTemplatePath, sCompTemplatePath
+Dim WellNumber, SepNumber, OilNumber, WaterNumber, FlareNumber, CompNumber
+Dim WellNameQuestion(), Answer(), i
+
+   Set oSvr = CreateObject("Serck.ScxV6Server")
+    oSvr.Connect "ClearScada", "flowdata", "flowdata"
+    If oSvr Is Nothing Then
+        'Server connection failed.
+        MsgBox ("Connection to SCX server failed.")
+        Exit Sub
+   End If
+
+  sSiteInstanceName = TextBox1.Text
+   ' Defining the path to the Reservoir group (sTemplatePath) and where the instance will be created (sInstancePath)
+   
+    sSiteTemplatePath = "REX Energy.~Templates.00 Site"
+    sInstancePath = "REX Energy.Site"
+           
+            sPath = sSiteTemplatePath
+            
+            Set oTemplate = oSvr.FindObject(sPath)
+            
+          ' oTemplate.PropertyOverride(oTemplate.ID, "ColourPalette") = 0
+           ' MsgBox "This Sensor is named:" & oTemplate.ID
+           
+                
+          '
+                Set oInstance = oSvr.CreateObject("CTemplateInstance", "REX Energy.Site")
+                
+                'Get the name for the Instance
+               oInstance.Rename (sSiteInstanceName)                            'Rename New Instance
+               oInstance.Interface.TemplateID = oTemplate.ID                 'Change Instance TemplateID
+
+ '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+If Not (TextBox2.Text = "" Or TextBox2.Text = "0") Then
+    WellNumber = CInt(TextBox2.Text)
+    ReDim WellNameQuestion(WellNumber)
+For i = 1 To WellNumber
+    WellNameQuestion(i) = " Enter the " & i & " Name."
+Next
+ReDim Answer(WellNumber)
+For i = 1 To WellNumber
+    Answer(i) = Application.InputBox(WellNameQuestion(i), "Well Name " & i, "Enter Well Name Here")
+Next
+Name = "REX Energy.Site." & TextBox1.Text
+For i = 0 To CInt(WellNumber) - 1
+ 
+    Set wInstance = oSvr.CreateObject("CTemplateInstance", Name)
+    Set wTemplate = oSvr.FindObject("REX Energy.~Templates.01 Well Head")
+        'wTemplate.PropertyOverride(wTemplate.ID, "ColourPalette") = 0
+        
+  
+        wInstance.Rename (Answer(i + 1))
+ 
+    wInstance.Interface.TemplateID = wTemplate.ID
+ Next
+    
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Creating Separators
+If Not (TextBox3.Text = "" Or TextBox3.Text = "0") Then
+    SepNumber = CInt(TextBox3.Text)
+    Call Sep(SepNumber)
+End If
+'Creating Oil Tanks
+If Not (TextBox4.Text = "" Or TextBox4.Text = "0") Then
+ OilNumber = CInt(TextBox4.Text)
+ Call OilTank(SepNumber)
+End If
+ If Not (TextBox5.Text = "" Or TextBox5.Text = "0") Then
+  WaterNumber = CInt(TextBox5.Text)
+  Call WaterTank(WaterNumber)
+ End If
+ If Not (TextBox6.Text = "" Or TextBox6.Text = "0") Then
+  FlareNumber = CInt(TextBox6.Text)
+  Call Flare(FlareNumber)
+ End If
+ If Not (TextBox7.Text = "" Or TextBox7.Text = "0") Then
+  CompNumber = CInt(TextBox7.Text)
+  Call Comp(CompNumber)
+ End If
+                 
+                
+     MsgBox "Added new Site:  " & oInstance.FullName
+            
+End Sub
+
+ Sub Sep(ByVal num As Integer)
+ Dim i, Name, wInstance, wTemplate
+ Name = "REX Energy.Site." & TextBox1.Text
+ Set oSvr = CreateObject("Serck.ScxV6Server")
+    oSvr.Connect "ClearScada", "flowdata", "flowdata"
+    If oSvr Is Nothing Then
+        'Server connection failed.
+        MsgBox ("Connection to SCX server failed.")
+        Exit Sub
+   End If
+ For i = 0 To num - 1
+ 
+    Set wInstance = oSvr.CreateObject("CTemplateInstance", Name)
+    Set wTemplate = oSvr.FindObject("REX Energy.~Templates.02 Separator")
+        'wTemplate.PropertyOverride(wTemplate.ID, "ColourPalette") = 0
+        
+    If num = 1 Then
+        wInstance.Rename ("Separator")
+    Else
+        wInstance.Rename ("Separator " & i + 1)
+    End If
+    wInstance.Interface.TemplateID = wTemplate.ID
+ Next
+End Sub
+
+ Sub OilTank(ByVal num As Integer)
+ Dim i, Name, wInstance, wTemplate
+ Name = "REX Energy.Site." & TextBox1.Text
+ Set oSvr = CreateObject("Serck.ScxV6Server")
+    oSvr.Connect "ClearScada", "flowdata", "flowdata"
+    If oSvr Is Nothing Then
+        'Server connection failed.
+        MsgBox ("Connection to SCX server failed.")
+        Exit Sub
+   End If
+ For i = 0 To num - 1
+ 
+    Set wInstance = oSvr.CreateObject("CTemplateInstance", Name)
+    Set wTemplate = oSvr.FindObject("REX Energy.~Templates.03 Tanks")
+        'wTemplate.PropertyOverride(wTemplate.ID, "ColourPalette") = 0
+        'MsgBox "This Sensor is named:" & wTemplate
+    If num = 1 Then
+        wInstance.Rename ("Oil Tank")
+    Else
+        wInstance.Rename ("Oil Tank " & i + 1)
+    End If
+    wInstance.Interface.TemplateID = wTemplate.ID
+ Next
+End Sub
+ Sub WaterTank(ByVal num As Integer)
+ Dim i, Name, wInstance, wTemplate
+ Name = "REX Energy.Site." & TextBox1.Text
+ Set oSvr = CreateObject("Serck.ScxV6Server")
+    oSvr.Connect "ClearScada", "flowdata", "flowdata"
+    If oSvr Is Nothing Then
+        'Server connection failed.
+        MsgBox ("Connection to SCX server failed.")
+        Exit Sub
+   End If
+ For i = 0 To num - 1
+ 
+    Set wInstance = oSvr.CreateObject("CTemplateInstance", Name)
+    Set wTemplate = oSvr.FindObject("REX Energy.~Templates.03 Tanks")
+        'wTemplate.PropertyOverride(wTemplate.ID, "ColourPalette") = 0
+        'MsgBox "This Sensor is named:" & wTemplate
+    If num = 1 Then
+        wInstance.Rename ("Water Tank")
+    Else
+        wInstance.Rename ("Water Tank " & i + 1)
+    End If
+    wInstance.Interface.TemplateID = wTemplate.ID
+ Next
+End Sub
+ Sub Flare(ByVal num As Integer)
+ Dim i, Name, wInstance, wTemplate
+ Name = "REX Energy.Site." & TextBox1.Text
+ Set oSvr = CreateObject("Serck.ScxV6Server")
+    oSvr.Connect "ClearScada", "flowdata", "flowdata"
+    If oSvr Is Nothing Then
+        'Server connection failed.
+        MsgBox ("Connection to SCX server failed.")
+        Exit Sub
+   End If
+ For i = 0 To num - 1
+ 
+    Set wInstance = oSvr.CreateObject("CTemplateInstance", Name)
+    Set wTemplate = oSvr.FindObject("REX Energy.~Templates.04 Flare")
+        'wTemplate.PropertyOverride(wTemplate.ID, "ColourPalette") = 0
+        'MsgBox "This Sensor is named:" & wTemplate
+    If num = 1 Then
+        wInstance.Rename ("Flare")
+    Else
+        wInstance.Rename ("Flare " & i + 1)
+    End If
+    wInstance.Interface.TemplateID = wTemplate.ID
+ Next
+End Sub
+ Sub Comp(ByVal num As Integer)
+ Dim i, Name, wInstance, wTemplate
+ Name = "REX Energy.Site." & TextBox1.Text
+ Set oSvr = CreateObject("Serck.ScxV6Server")
+    oSvr.Connect "ClearScada", "flowdata", "flowdata"
+    If oSvr Is Nothing Then
+        'Server connection failed.
+        MsgBox ("Connection to SCX server failed.")
+        Exit Sub
+   End If
+ For i = 0 To num - 1
+ 
+    Set wInstance = oSvr.CreateObject("CTemplateInstance", Name)
+    Set wTemplate = oSvr.FindObject("REX Energy.~Templates.04 Flare")
+        'wTemplate.PropertyOverride(wTemplate.ID, "ColourPalette") = 0
+        'MsgBox "This Sensor is named:" & wTemplate
+    If num = 1 Then
+        wInstance.Rename ("Compressor")
+    Else
+        wInstance.Rename ("Compressor " & i + 1)
+    End If
+    wInstance.Interface.TemplateID = wTemplate.ID
+ Next
+End Sub
+
