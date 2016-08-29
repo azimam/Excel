@@ -3,7 +3,7 @@ Dim oSvr, oTemplate, oInstance, obj, iRow, Name, wInstance, wTemplate
 Dim sPath, sSiteTemplatePath, sWellTemplatePath, sInstancePath, sSiteInstanceName As String
 Dim sSepTemplatePath, sTankTemplatePath, sFlareTemplatePath, sCompTemplatePath
 Dim WellNumber, SepNumber, OilNumber, WaterNumber, FlareNumber, CompNumber
-Dim WellNameQuestion(), Answer(), i
+Dim WellNameQuestion(), Answer(), i , Obj2
 
    Set oSvr = CreateObject("Serck.ScxV6Server")
     oSvr.Connect "ClearScada", "flowdata", "flowdata"
@@ -33,6 +33,8 @@ Dim WellNameQuestion(), Answer(), i
                 'Get the name for the Instance
                oInstance.Rename (sSiteInstanceName)                            'Rename New Instance
                oInstance.Interface.TemplateID = oTemplate.ID                 'Change Instance TemplateID
+               Set Obj2 = oSvr.FindObject("REX Energy.Site." & TextBox1.Text & ".~Site Parameter.Rout Name")
+               Obj2.Interface.CurrentValue = TextBox8.Text
 
  '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 If Not (TextBox2.Text = "" Or TextBox2.Text = "0") Then
