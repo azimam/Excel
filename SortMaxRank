@@ -1,0 +1,58 @@
+
+Private Type ArrayInfo
+    MyArray(4) As Long
+    Acending(4) As Long
+    Decending(4) As Integer
+    Rank(4) As Long
+End Type
+Sub SortArray()
+    Dim i, j As Integer
+    Dim Data As ArrayInfo
+    ArrUBound = UBound(Data.MyArray, 1)
+    ArrLBound = LBound(Data.MyArray, 1)
+    For i = ArrLBound To ArrUBound
+    With Data
+        .MyArray(i) = ThisWorkbook.Sheets("Sheet1").Range("D" & i + 3).Value
+        .Acending(i) = .MyArray(i)
+        .Decending(i) = .MyArray(i)
+        .Rank(i) = i
+    End With
+    Next
+    For i = 0 To ArrUBound
+      For j = i + 1 To ArrUBound
+        With Data
+            If .Acending(i) > .Acending(j) Then
+                  TempValue = .Acending(j)
+                  Temp2Value = .Rank(j)
+                 .Acending(j) = .Acending(i)
+                 .Rank(j) = .Rank(i)
+                 .Acending(i) = TempValue
+                 .Rank(i) = Temp2Value
+             End If
+             If .Decending(i) < .Decending(j) Then
+                  Temp3Value = .Decending(j)
+                 .Decending(j) = .Decending(i)
+                 .Decending(i) = Temp3Value
+             End If
+             
+         End With
+        Next j
+    Next i
+   
+ 
+    For i = ArrLBound To ArrUBound
+         ThisWorkbook.Sheets("Sheet1").Range("E" & i + 3).Value = Data.Acending(i)
+         'Data.Decending(ArrUBound - i) = Data.Acending(ArrUBound - i)
+         ThisWorkbook.Sheets("Sheet1").Range("F" & i + 3).Value = Data.Decending(i)
+         ThisWorkbook.Sheets("Sheet1").Range("G" & i + 3).Value = Data.Rank(i)
+          Next
+    ''Max Number
+    ThisWorkbook.Sheets("Sheet1").Range("J2").Value = Data.Decending(0)
+End Sub
+
+Sub ClearSheet()
+Range("E3:G7").ClearContents
+Range("J2").ClearContents
+End Sub
+    
+    
