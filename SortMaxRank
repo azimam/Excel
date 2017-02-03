@@ -1,4 +1,3 @@
-
 Private Type ArrayInfo
     MyArray(4) As Long
     Acending(4) As Long
@@ -8,9 +7,11 @@ End Type
 Sub SortArray()
     Dim i, j As Integer
     Dim Data As ArrayInfo
+    Dim MyRank(4) As Long
     ArrUBound = UBound(Data.MyArray, 1)
     ArrLBound = LBound(Data.MyArray, 1)
     For i = ArrLBound To ArrUBound
+   
     With Data
         .MyArray(i) = ThisWorkbook.Sheets("Sheet1").Range("D" & i + 3).Value
         .Acending(i) = .MyArray(i)
@@ -38,13 +39,15 @@ Sub SortArray()
          End With
         Next j
     Next i
-   
- 
+     For i = ArrLBound To ArrUBound
+        MyRank(Data.Rank(i)) = i
+    Next i
+    
     For i = ArrLBound To ArrUBound
          ThisWorkbook.Sheets("Sheet1").Range("E" & i + 3).Value = Data.Acending(i)
          'Data.Decending(ArrUBound - i) = Data.Acending(ArrUBound - i)
          ThisWorkbook.Sheets("Sheet1").Range("F" & i + 3).Value = Data.Decending(i)
-         ThisWorkbook.Sheets("Sheet1").Range("G" & i + 3).Value = Data.Rank(i)
+         ThisWorkbook.Sheets("Sheet1").Range("G" & i + 3).Value = MyRank(i)
           Next
     ''Max Number
     ThisWorkbook.Sheets("Sheet1").Range("J2").Value = Data.Decending(0)
@@ -56,3 +59,5 @@ Range("J2").ClearContents
 End Sub
     
     
+
+
