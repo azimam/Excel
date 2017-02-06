@@ -1,0 +1,44 @@
+
+Private Type LACTInfo
+    PName(8) As String
+    Pvalue(8) As Long
+    
+End Type
+Sub SortLACT()
+    Dim i, j As Integer
+    Dim Data As LACTInfo
+    Dim LACTName(8) As String
+    Dim LACTSort(8) As String
+ For i = 0 To 8
+    With Data
+        .PName(i) = ThisWorkbook.Sheets("Sheet1").Range("D" & i + 3).Value
+        .Pvalue(i) = ThisWorkbook.Sheets("Sheet1").Range("E" & i + 3).Value
+    End With
+Next
+For i = 0 To 8
+    LACTIndex = InStr(1, Data.PName(i), "LACT")
+    LACTName(i) = Left(Right(Data.PName(i), Len(Data.PName(i)) - LACTIndex + 1), 9)
+    LACTSort(i) = LACTName(i)
+ Next
+ 
+For i = 0 To 8
+      For j = i + 1 To 8
+       
+            If LACTSort(i) > LACTSort(j) Then
+                  TempValue = LACTSort(j)
+                  LACTSort(j) = LACTSort(i)
+                  LACTSort(i) = TempValue
+                
+             End If
+        Next j
+    Next i
+    
+For i = 0 To 8
+    ThisWorkbook.Sheets("Sheet1").Range("G" & i + 3).Value = LACTName(i)
+    ThisWorkbook.Sheets("Sheet1").Range("H" & i + 3).Value = LACTSort(i)
+Next i
+End Sub
+
+    
+    
+
