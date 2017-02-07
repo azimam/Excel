@@ -1,0 +1,47 @@
+Sub TimeCalc()
+    Dim TArray(2), VArray(2) As Integer
+    Dim TimeStamp As Date
+    Dim Value As Boolean
+    Dim PValue As Boolean
+    Dim Last0Time As String
+    Dim Last1Time As String
+    Dim DiffTime As Long
+   ''''''''''''
+   Value = ThisWorkbook.Sheets("Sheet1").Range("D3").Value
+   TimeStamp = ThisWorkbook.Sheets("Sheet1").Range("E3").Value
+   PValue = ThisWorkbook.Sheets("Sheet1").Range("F3").Value
+   
+   ''''''''''''
+   If PValue = True And Value = False Then
+    
+    Last0Time = Format(TimeStamp, "mm/dd/yyyy hh:nn:ss")
+   End If
+   
+  
+   If Value = False Then
+        DiffTime = DateDiff("n", Last0Time, Now())
+       ' If DiffTime > 1440 Then
+           
+       ' DiffTime = DateDiff("n", Month(Now()) & "/" & Day(Now()) & "/" & Year(Now()) & " 12:00:01AM", Now())
+        'DiffTime = (DiffTime Mod (60 * 24))
+       ' MsgBox DiffTime
+       ' End If
+   
+   End If
+If False = False And Value = True Then
+    
+    Last1Time = Format(TimeStamp, "mm/dd/yyyy hh:nn:ss")
+   End If
+   
+  
+   If Value = True Then
+        DiffTime = DateDiff("n", Last1Time, Now())
+        
+   End If
+  
+    ThisWorkbook.Sheets("Sheet1").Range("I3").Value = Last0Time
+    ThisWorkbook.Sheets("Sheet1").Range("J3").Value = DiffTime
+    ThisWorkbook.Sheets("Sheet1").Range("K3").Value = Last1Time
+End Sub
+
+    
