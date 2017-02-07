@@ -1,42 +1,74 @@
 
+
 Private Type LACTInfo
     PName(8) As String
     Pvalue(8) As Long
+    X(8) As Long
     
 End Type
 Sub SortLACT()
     Dim i, j As Integer
     Dim Data As LACTInfo
-    Dim LACTName(8) As String
-    Dim LACTSort(8) As String
+    Dim LactPriority(8), Y(8) As Long
+    Dim LACTSort(8), Yname(8) As String
+    
+'Reading Point name and value form Excel sheet
  For i = 0 To 8
     With Data
         .PName(i) = ThisWorkbook.Sheets("Sheet1").Range("D" & i + 3).Value
         .Pvalue(i) = ThisWorkbook.Sheets("Sheet1").Range("E" & i + 3).Value
+        .X(i) = ThisWorkbook.Sheets("Sheet1").Range("F" & i + 3).Value
     End With
 Next
+'''''''''''
+
 For i = 0 To 8
     LACTIndex = InStr(1, Data.PName(i), "LACT")
-    LACTName(i) = Left(Right(Data.PName(i), Len(Data.PName(i)) - LACTIndex + 1), 9)
-    LACTSort(i) = LACTName(i)
+    LACTSort(i) = Left(Right(Data.PName(i), Len(Data.PName(i)) - LACTIndex + 1), 9)
+    LactPriority(i) = Data.Pvalue(i)
  Next
  
 For i = 0 To 8
       For j = i + 1 To 8
        
-            If LACTSort(i) > LACTSort(j) Then
-                  TempValue = LACTSort(j)
+            If LactPriority(i) > LactPriority(j) Then
+                  TempValue = LactPriority(j)
+                  TempValue2 = LACTSort(j)
+                  LactPriority(j) = LactPriority(i)
                   LACTSort(j) = LACTSort(i)
-                  LACTSort(i) = TempValue
-                
+                  LactPriority(i) = TempValue
+                  LACTSort(i) = TempValue2
              End If
         Next j
     Next i
-    
+''Write to excel sheet
 For i = 0 To 8
-    ThisWorkbook.Sheets("Sheet1").Range("G" & i + 3).Value = LACTName(i)
-    ThisWorkbook.Sheets("Sheet1").Range("H" & i + 3).Value = LACTSort(i)
+    ThisWorkbook.Sheets("Sheet1").Range("H" & i + 3).Value = LactPriority(i)
+    ThisWorkbook.Sheets("Sheet1").Range("I" & i + 3).Value = LACTSort(i)
 Next i
+'''''''''''''''''
+For i = 0 To 8
+    Yname(i) = "SANANTONIO.UIS:" & LACTSort(i) & "_PIPEPSI"
+    For j = 0 To 8
+     
+        If InStr(1, Data.PName(j), LACTSort(i)) <> 0 Then
+            Y(i) = Data.X(j) * 10
+            
+        End If
+    Next j
+    'Write to excel sheet
+    ThisWorkbook.Sheets("Sheet1").Range("j" & i + 3).Value = Y(i)
+    ThisWorkbook.Sheets("Sheet1").Range("k" & i + 3).Value = Yname(i)
+    '''''''''''''''
+   'Pause the program for 5 sec
+   waitTime = Now() + TimeValue("00:00:05")
+    While Now() < waitTime
+        DoEvents
+    Wend
+Next i
+
+ 
+
 End Sub
 
     
