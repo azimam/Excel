@@ -1,0 +1,450 @@
+
+Sub Kalman()
+
+'Sets Data Ranges in the excel Spreadsheet
+Dim Meas, Filt, Time As Range
+Set Meas = Worksheets("Filter").Range("B3:B100")
+Set Filt = Worksheets("Filter").Range("E3:E100")
+Set Time = Worksheets("Filter").Range("A3:A100")
+
+
+'Y is the number of measurement points incorporated into the system.  It is setup for
+Dim Y(1 To 1, 1 To 1) As Double ' Is current measurement
+Dim X(1 To 2, 1 To 1) As Double ' Is current state estimate
+
+'////////////////////
+Dim T As Double
+Dim TPrev As Double
+'////////////////////
+
+'/////////////////////////////////////////////////////////////////////
+'These matrices are used in the Kalman Filter
+Dim R(1 To 1, 1 To 1) As Double ' Measurement Error Covariance Matrix
+Dim Q(1 To 2, 1 To 2) As Double ' Process Error Covariance Matrix
+Dim H(1 To 1, 1 To 2) As Double ' State to measurement transformation matrix
+Dim k(1 To 2, 1 To 1) As Double ' Kalman Gain Matrix
+Dim S(1 To 1, 1 To 1) As Double ' Innovation Covariance Matrix
+Dim P(1 To 2, 1 To 2) As Double ' Process Covariance Matrix
+Dim F(1 To 2, 1 To 2) As Double ' Time step Matrix
+'/////////////////////////////////////////////////////////////////////
+
+
+
+'///////////////////////////////////////////
+'Integers used in stepping through the program
+Dim i, j, m, n, o As Integer
+'//////////////////////////////////////////
+
+'////////////
+'Gets initial Measurements
+Y(1, 1) = Meas(1, 1)    ' Well 1 Flow rate
+'///////////////////
+
+'//////////////////
+' State to Measurement Transformation matrix (for current setup since one measurement per state variable is identity matrix
+H(1, 1) = 0
+H(1, 2) = 1
+
+
+'////////////////////////////////////
+'Sets initial Process Covariance Matrix (Currently Identity matrix changing can be initialized as a zero matrix)
+'Initializes Measurement covariance matrix with Excel range
+ R(1, 1) = 1
+For m = 1 To 2
+    For n = 1 To 2
+       If m = n Then
+          P(m, n) = 1
+          Q(m, n) = 1
+       Else
+          P(m, n) = 0
+          Q(m, n) = 0
+        End If
+        'P(m, n) = PMat(m, n)
+        'Q(m, n) = QMat(m, n)
+    Next n
+Next m
+'/////////////////////////////////////////
+
+
+'/////////////////////////////////////////////////////////////////
+'Initiates the state using current measurements
+'This section is used if raw data (or constant flash calc not time varying- can still vary based on sep pressure but for every sep pressure it is set) is used
+    X(1, 1) = 1
+    X(2, 1) = Y(1, 1)
+'/////////////////////////////////////////////////////////////////
+
+'///////////////////////////////////////
+' Gets beginning time
+T = Time(1, 1)
+'////////////////////////////////
+
+
+'////////////////////////////
+'Beginning of the Algorithim
+'Starts at time 0 and continues till out of data
+
+For i = 1 To 98 'Meas.Rows.Count
+    j = j + 1
+    
+    TPrev = T
+    T = Time(j, 1)
+      
+    
+'//////////////////////////////////////
+' Gets new measurement
+    Y(1, 1) = Meas(j, 1)
+   
+    
+'/////////////////////////////////////////////////////
+'Beginning of the forwad pass of the Kalman filter see wikipedia reference for equations
+'Builds the Time step Matrix F The
+    Call BuildF(F, T, TPrev) '
+    
+    
+    
+'State prediction of X of time step k given information in time step k-1
+    Call StatePred(X, F)
+           
+'////////////////////////////////////////
+'   Calculates P of time step k given information in time step k-1
+    Call CovPred(P, F, Q)
+'/////////////////////////////////////////
+    
+'Builds the S Matrix
+    Call InnovCov(S, P, H, R)
+
+
+'Calculates Kalman gain
+    Call KalmanGain(k, P, H, S)
+    
+'Calculates X of time step k given information in time step k
+    Call StateUpdate(X, Y, k, H) ' Use measurement exactly
+'   Call StateUpdate(X, Z, K, H) ' Use if using time varying flash factor
+        
+' Calculates P of time step k given informatin in time step k
+    Call CovUpdate(P, k, H)
+    
+' Updates the State values in the excel spreadsheet
+    For m = LBound(X, 1) To UBound(X, 1)
+        Filt(j, m) = X(m, 1)
+    Next m
+    
+Next i
+'Application.Calculate
+
+End Sub
+
+Function BuildF(ByRef F() As Double, ByVal T As Double, ByVal TPrev As Double)
+'           HP flow         Lact        Tank
+'HPFlow     1               0           0
+'Lact       0               1           0
+'Tank       dT               dT           1
+Dim i As Integer
+Dim j As Integer
+
+'This builds the F matrix assuming all flows into and out of the tanks are the first entries to the state matrix
+'and the tank volume is the  last entry in the state matrix
+
+For i = LBound(F, 1) To UBound(F, 1)
+    For j = LBound(F, 2) To UBound(F, 2)
+        If i = UBound(F, 1) Then
+            If j = UBound(F, 2) Then
+                F(i, j) = 1
+            Else
+                F(i, j) = T - TPrev
+            End If
+        Else
+            If i = j Then
+                F(i, j) = 1
+            Else
+                F(i, j) = 0
+            End If
+        End If
+    Next j
+Next i
+
+
+For i = LBound(F, 1) To UBound(F, 1)
+    For j = LBound(F, 1) To UBound(F, 2)
+        Worksheets(1).Range("F").Cells(i, j) = F(i, j)
+    Next j
+    
+Next i
+
+
+End Function
+
+Function StatePred(ByRef X() As Double, ByRef F() As Double)
+Dim Holder() As Variant
+ReDim Holder(1 To UBound(F, 1), 1 To UBound(F, 2))
+Dim i, j, k As Integer
+
+ For i = 1 To UBound(F, 1)
+        For j = 1 To UBound(X, 2)
+                Holder(i, j) = 0
+                For k = 1 To UBound(X, 1)
+                        Holder(i, j) = Holder(i, j) + (F(i, k) * X(k, j))
+                Next k
+                
+        Next j
+Next i
+
+For i = LBound(X, 1) To UBound(X, 1)
+    X(i, 1) = Holder(i, 1)
+Next i
+
+End Function
+
+Function CovPred(ByRef P() As Double, ByRef F() As Double, ByRef Q() As Double)
+
+Dim Holder(), FTranspose(), Temp() As Variant
+ReDim Holder(1 To UBound(P, 1), 1 To UBound(P, 2))
+ReDim FTranspose(1 To 2, 1 To 2)
+ReDim Temp(2, 2)
+Dim i, j, k As Integer
+
+For i = 1 To 2
+        For j = 1 To 2
+            FTranspose(j, i) = F(i, j)
+        Next j
+        
+Next i
+
+
+
+ For i = 1 To UBound(P, 1)
+        For j = 1 To UBound(FTranspose, 2)
+                Temp(i, j) = 0
+                For k = 1 To UBound(FTranspose, 1)
+                        Temp(i, j) = Temp(i, j) + (P(i, k) * FTranspose(k, j))
+                Next k
+                
+        Next j
+Next i
+ For i = 1 To UBound(F, 1)
+        For j = 1 To UBound(Temp, 2)
+                Holder(i, j) = 0
+                For k = 1 To UBound(Temp, 1)
+                        Holder(i, j) = Holder(i, j) + (F(i, k) * Temp(k, j))
+                Next k
+                
+        Next j
+Next i
+
+
+
+
+For i = LBound(P, 1) To UBound(P, 1)
+    For j = LBound(P, 1) To UBound(P, 2)
+        P(i, j) = Holder(i, j) + Q(i, j)
+    Next j
+Next i
+
+For i = LBound(P, 1) To UBound(P, 1)
+    For j = LBound(P, 2) To UBound(P, 2)
+        Worksheets("Filter").Range("P").Cells(i, j) = P(i, j)
+    Next j
+Next i
+
+End Function
+
+Function InnovCov(ByRef S() As Double, ByRef P() As Double, ByRef H() As Double, ByRef R() As Double)
+Dim Holder(), Htranspose(), Temp() As Variant
+Dim i, j, k, A As Integer
+
+
+   
+ReDim Htranspose(1 To UBound(H, 2), 1 To UBound(H, 1))
+    For i = 1 To UBound(H, 1)
+        For j = 1 To UBound(H, 2)
+            Htranspose(j, i) = H(i, j)
+        Next j
+Next i
+ReDim Temp(1 To UBound(P, 1), 1 To UBound(Htranspose, 2))
+ For i = 1 To UBound(P, 1)
+        For j = 1 To UBound(Htranspose, 2)
+                Temp(i, j) = 0
+                For k = 1 To UBound(Htranspose, 1)
+                        Temp(i, j) = Temp(i, j) + (P(i, k) * Htranspose(k, j))
+                Next k
+                
+        Next j
+Next i
+ReDim Holder(1 To UBound(H, 1), 1 To UBound(Temp, 2))
+ For i = 1 To UBound(H, 1)
+        For j = 1 To UBound(Temp, 2)
+                Holder(i, j) = 0
+                For k = 1 To UBound(Temp, 1)
+                        Holder(i, j) = Holder(i, j) + (H(i, k) * Temp(k, j))
+                Next k
+                
+        Next j
+Next i
+
+
+   
+        For i = LBound(S, 1) To UBound(S, 1)
+            For j = LBound(S, 2) To UBound(S, 2)
+                S(i, j) = Holder(i, j) + R(i, j)
+            Next j
+        Next i
+
+
+    For i = LBound(S, 1) To UBound(S, 1)
+        For j = LBound(S, 1) To UBound(S, 2)
+            Worksheets("Filter").Range("S").Cells(i, j) = S(i, j)
+        Next j
+    Next i
+
+End Function
+
+Function KalmanGain(ByRef k() As Double, ByRef P() As Double, ByRef H() As Double, ByRef S() As Double)
+Dim SHolder(), Htranspose(), Temp() As Variant
+ReDim SHolder(1 To UBound(S, 1), 1 To UBound(S, 2))
+Dim HHolder() As Variant
+ReDim HHolder(1 To UBound(H, 1), 1 To UBound(H, 2))
+Dim PHolder() As Variant
+ReDim PHolder(1 To UBound(P, 1), 1 To UBound(P, 2))
+Dim Inverse() As Variant
+Dim KHolder() As Variant
+
+Dim i As Integer
+Dim j, m As Integer
+
+
+    ReDim Inverse(1 To 1, 1 To 1)
+    Inverse(1, 1) = 1 / S(1, 1)
+    
+    ReDim Htranspose(1 To UBound(H, 2), 1 To UBound(H, 1))
+    For i = 1 To UBound(H, 1)
+        For j = 1 To UBound(H, 2)
+            Htranspose(j, i) = H(i, j)
+        Next j
+    Next i
+'''''''
+ReDim Temp(1 To UBound(Htranspose, 1), 1 To UBound(Inverse, 2))
+ For i = 1 To 2
+ Temp(i, 1) = 0
+ Temp(i, 1) = Temp(i, 1) + (Htranspose(i, 1) * Inverse(1, 1))
+ Next i
+                        
+ReDim KHolder(1 To UBound(P, 1), 1 To UBound(Temp, 2))
+ For i = 1 To UBound(P, 1)
+        For j = 1 To UBound(Temp, 2)
+                KHolder(i, j) = 0
+                For m = 1 To UBound(Temp, 1)
+                        KHolder(i, j) = KHolder(i, j) + (P(i, m) * Temp(m, j))
+                Next m
+                
+        Next j
+Next i
+'''''''
+    For i = LBound(k, 1) To UBound(k, 1)
+        For j = LBound(k, 1) To UBound(k, 2)
+            k(i, j) = KHolder(i, j)
+        Next j
+    Next i
+
+    For i = LBound(k, 1) To UBound(k, 1)
+        For j = LBound(k, 2) To UBound(KHolder, 2)
+            Worksheets(1).Range("K").Cells(i, j) = k(i, j)
+        Next j
+    Next i
+    
+End Function
+
+Function StateUpdate(ByRef X() As Double, ByRef Y() As Double, ByRef k() As Double, ByRef H() As Double)
+Dim Holder() As Variant
+Dim HolderTwo As Variant
+Dim Temp() As Double
+ReDim Temp(1 To UBound(Y), 1 To 1)
+Dim i, j, m As Integer
+
+   
+ReDim Holder(1 To UBound(H, 1), 1 To UBound(X, 2))
+ For i = 1 To UBound(H, 1)
+        For j = 1 To UBound(X, 2)
+                Holder(i, j) = 0
+                For m = 1 To UBound(X, 1)
+                        Holder(i, j) = Holder(i, j) + (H(i, m) * X(m, j))
+                Next m
+                
+        Next j
+Next i
+    
+
+        For i = LBound(Y, 1) To UBound(Y, 1)
+            Temp(i, 1) = Y(i, 1) - Holder(i, 1)
+        Next i
+
+    
+
+ ReDim HolderTwo(1 To UBound(k, 1), 1 To UBound(Temp, 2))
+ For i = 1 To UBound(k, 1)
+        For j = 1 To UBound(Temp, 2)
+                HolderTwo(i, j) = 0
+                For m = 1 To UBound(Temp, 1)
+                        HolderTwo(i, j) = HolderTwo(i, j) + (k(i, m) * Temp(m, j))
+                Next m
+                
+        Next j
+Next i
+    
+
+        For i = LBound(X, 1) To UBound(X, 1)
+            X(i, 1) = X(i, 1) + HolderTwo(i, 1)
+        Next i
+
+
+End Function
+
+Function CovUpdate(ByRef P() As Double, ByRef k() As Double, ByRef H() As Double)
+Dim Holder() As Variant
+Dim HolderTwo() As Variant
+
+Dim i, j, m As Integer
+
+
+ReDim Holder(1 To UBound(k, 1), 1 To UBound(H, 2))
+ For i = 1 To UBound(k, 1)
+        For j = 1 To UBound(H, 2)
+                Holder(i, j) = 0
+                For m = 1 To UBound(H, 1)
+                        Holder(i, j) = Holder(i, j) + (k(i, m) * H(m, j))
+                Next m
+                
+        Next j
+Next i
+    
+    
+    For i = 1 To UBound(Holder, 1)
+        For j = 1 To UBound(Holder, 2)
+            If i = j Then
+                Holder(i, j) = 1 - Holder(i, j)
+            Else
+                Holder(i, j) = -Holder(i, j)
+            End If
+        Next j
+    Next i
+    
+
+ReDim HolderTwo(1 To UBound(Holder, 1), 1 To UBound(P, 2))
+ For i = 1 To UBound(Holder, 1)
+        For j = 1 To UBound(P, 2)
+                HolderTwo(i, j) = 0
+                For m = 1 To UBound(P, 1)
+                        HolderTwo(i, j) = HolderTwo(i, j) + (Holder(i, m) * P(m, j))
+                Next m
+                
+        Next j
+Next i
+    
+ 
+    For i = LBound(P, 1) To UBound(P, 1)
+        For j = LBound(P, 2) To UBound(P, 2)
+            P(i, j) = HolderTwo(i, j)
+        Next j
+    Next i
+    
+
+End Function
