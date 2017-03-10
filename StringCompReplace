@@ -1,0 +1,13 @@
+Sub STCompare()
+
+For i = 1 To 271
+
+    For j = 1 To 271
+        If InStr(1, Sheets("Sheet1").Range("C" & j).Value, Sheets("Sheet1").Range("A" & i).Value) <> 0 Then
+        Sheets("Sheet1").Range("F" & j).Value = Sheets("Sheet1").Range("B" & i).Value
+        MyArray(j) = Sheets("Sheet1").Range("B" & i).Value
+        End If
+    Next j
+ Next i
+
+End Sub
