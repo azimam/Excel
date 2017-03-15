@@ -1,0 +1,44 @@
+Sub InsertHistoric()
+Dim oSvr, Obj, i, Name
+Dim iRowNumber, iRowNumber2 As Double
+'Connect to ClearSCADA server
+
+'''''''''''''''''''''''''''''
+
+    ''''''
+     Set oSvr = CreateObject("Serck.ScxV6Server")
+     oSvr.Connect "SERVER", "amotaghi", "Itsa13*"
+     'oSvr.Connect "ClearScada", "flowdata", "flowdata"
+    If oSvr Is Nothing Then
+        'Server connection failed.
+        MsgBox ("Connection to SCX server failed.")
+        Exit Sub
+    End If
+    
+''''Create a reference to the point.
+    Set Obj = oSvr.FindObject(Worksheets("Update Points").Cells(1, 1))
+    If Obj Is Nothing Then
+        MsgBox "Please ensure the point full name entered is valid.", vbOKOnly, "Invalid Point"
+        Exit Sub
+    End If
+        
+    
+    iRowNumber = 2
+    
+    'Iterate through the file until the end is reached.
+    While Not Worksheets("Update Points").Cells(iRowNumber, 1) = ""
+   
+           
+        sDataTime = CDate(Worksheets("Update Points").Cells(iRowNumber, 1))
+        aDataValue = Split(Worksheets("Update Points").Cells(iRowNumber, 2), " ")
+        'Obj.Interface.Historic
+           Obj.Interface.Historic.LoadDataValue 4, 192, sDataTime, CDbl(aDataValue(0))
+           iRowNumber = iRowNumber + 1
+    Wend
+   
+     MsgBox "History loaded", vbOKOnly, Obj.Interface.FullName
+End Sub
+
+
+
+
