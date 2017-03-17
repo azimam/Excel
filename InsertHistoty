@@ -31,7 +31,7 @@ Dim iRowNumber, iRowNumber2 As Double
            
         sDataTime = CDate(Worksheets("Update Points").Cells(iRowNumber, 1))
         aDataValue = Split(Worksheets("Update Points").Cells(iRowNumber, 2), " ")
-        'Obj.Interface.Historic
+        'Obj.Interface.Historic.LoadDataValue Reason (long), Quality (Long), Time Stamp (Time), Value (Variant)
            Obj.Interface.Historic.LoadDataValue 4, 192, sDataTime, CDbl(aDataValue(0))
            iRowNumber = iRowNumber + 1
     Wend
