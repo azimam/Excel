@@ -1,0 +1,157 @@
+'Inserting ODBC event table into excel and calculating number of Alarms based on their severity
+Sub BBOGInsertAlarm()
+'
+ Sheets("Alarms-BBOG-Raised").Select
+    StartDate = Worksheets("Alarm Summary").Range("N2").Value
+    StartDate = Format(StartDate, "yyyy-MM-dd hh:mm:ss")
+    EndDate = Worksheets("Alarm Summary").Range("N3").Value
+    EndDate = Format(EndDate, "yyyy-MM-dd hh:mm:ss")
+    If Worksheets("Alarm Summary").Range("N2").Value = "" Then
+        MsgBox ("Please Enter the Start Date.")
+        Sheets("Alarm Summary").Select
+        Worksheets("Alarm Summary").Range("N2").Select
+        Exit Sub
+    End If
+    
+    If Worksheets("Alarm Summary").Range("N3").Value = "" Then
+        MsgBox ("Please Enter the End Date.")
+        Sheets("Alarm Summary").Select
+        Worksheets("Alarm Summary").Range("N3").Select
+        Exit Sub
+    End If
+    Columns("A:H").Select
+    Selection.ListObject.QueryTable.Delete
+    Selection.ClearContents
+'
+
+Application.ODBCTimeout = 999
+
+    ActiveWindow.SmallScroll Down:=-12
+      With ActiveSheet.ListObjects.Add(SourceType:=0, Source:= _
+        "ODBC;Driver={ClearSCADA Driver};LOCATION=SERVER;UID=amotaghi;;LOCALTIME=False;", _
+        Destination:=Range("$A$1")).QueryTable
+        .CommandText = Array( _
+        "SELECT CDBEventJournal.Severity, CDBEventJournal.RecordTime, CDBEventJournal.Source, CDBPoint.AlarmSource, CDBEventJournal.Message, CDBEventJournal.User, CDBEventJournal.Category" & Chr(13) & "" & Chr(10) & "FROM Historic.CDBEve" _
+        , _
+        "ntJournal CDBEventJournal, Core.CDBPoint CDBPoint" & Chr(13) & "" & Chr(10) & "WHERE CDBEventJournal.Id = CDBPoint.Id AND ((CDBEventJournal.RecordTime>{ts '" & StartDate & "'} And CDBEventJournal.RecordTime<={ts '" & EndDate & "'})" _
+        , _
+        " AND (CDBEventJournal.Message Like '%raised%')AND ((CDBEventJournal.Source Like '%BBOG%') OR(CDBEventJournal.Source Like '%Texstar.Gas Gathering%')) )" & Chr(13) & "" & Chr(10) & "ORDER BY CDBEventJournal.Severity, CDBEventJournal.Source" _
+        )
+        .RowNumbers = False
+        .FillAdjacentFormulas = False
+        .PreserveFormatting = True
+        .RefreshOnFileOpen = False
+        .BackgroundQuery = True
+        .RefreshStyle = xlInsertDeleteCells
+        .SavePassword = False
+        .SaveData = True
+        .AdjustColumnWidth = True
+        .RefreshPeriod = 0
+        .PreserveColumnInfo = True
+        .ListObject.DisplayName = "Table_Query_from_ClearScada_1"
+        .Refresh BackgroundQuery:=False
+        
+        
+    End With
+    Columns("B:B").Select
+    Selection.NumberFormat = "[$-409]m/d/yy h:mm AM/PM;@"
+    Call GenerateBBOGAlaram
+    MsgBox "BBOG Alarams loaded"
+        
+        
+   
+End Sub
+Sub GenerateBBOGAlaram()
+Dim Critical, High, Low, Medium, Total As Long
+Dim RowCount As Long
+'Clear BBOG List
+   
+    RowCount = 0
+    While Not ThisWorkbook.Worksheets("BBOG").Cells(RowCount + 1, 1) = ""
+           RowCount = RowCount + 1
+    Wend
+    If RowCount > 1 Then
+    Worksheets("BBOG").Range("A2:G" & RowCount).ClearContents
+    End If
+   
+    RowCount = 0
+    While Not ThisWorkbook.Worksheets("BBOG").Cells(RowCount + 1, 1) = ""
+           RowCount = RowCount + 1
+    Wend
+    If RowCount > 1 Then
+    Worksheets("BBOG").Range("A2:C" & RowCount).ClearContents
+    End If
+    Worksheets("Alarm Summary").Range("A20:M29").ClearContents
+'''
+    RowCount = 0
+    While Not ThisWorkbook.Worksheets("Alarms-BBOG-Raised").Cells(RowCount + 1, 1) = ""
+           RowCount = RowCount + 1
+    Wend
+    If RowCount < 2 Then
+    MsgBox "Please Insert Alarm List"
+     Exit Sub
+    End If
+ 
+    Critical = 0
+    High = Low = Medium = Total = 0
+    
+    AlarmCount = 1
+    AlarmIndex = 2
+    Worksheets("BBOG").Range("A2") = Worksheets("Alarms-BBOG-Raised").Range("C2")
+    Worksheets("BBOG").Range("B2") = Worksheets("Alarms-BBOG-Raised").Range("D2")
+    Worksheets("BBOG").Range("C2") = 1
+    If RowCount > 1 Then
+    For i = 2 To RowCount
+    
+        If InStr(1, Worksheets("Alarms-BBOG-Raised").Range("A" & i), "Critical") <> 0 Then
+             Critical = Critical + 1
+        End If
+         If InStr(1, Worksheets("Alarms-BBOG-Raised").Range("A" & i), "High") <> 0 Then
+             High = High + 1
+        End If
+         If InStr(1, Worksheets("Alarms-BBOG-Raised").Range("A" & i), "Low") <> 0 Then
+             Low = Low + 1
+        End If
+        If InStr(1, Worksheets("Alarms-BBOG-Raised").Range("A" & i), "Medium") <> 0 Then
+             Medium = Medium + 1
+        End If
+        If i > 2 Then
+            If Worksheets("Alarms-BBOG-Raised").Range("C" & i) = Worksheets("Alarms-BBOG-Raised").Range("C" & i - 1) Then
+                AlarmCount = AlarmCount + 1
+                Worksheets("BBOG").Range("C" & AlarmIndex) = AlarmCount
+            Else
+                AlarmCount = 1
+               AlarmIndex = AlarmIndex + 1
+               Worksheets("BBOG").Range("C" & AlarmIndex) = AlarmCount
+               Worksheets("BBOG").Range("A" & AlarmIndex) = Worksheets("Alarms-BBOG-Raised").Range("C" & i)
+               Worksheets("BBOG").Range("B" & AlarmIndex) = Worksheets("Alarms-BBOG-Raised").Range("D" & i)
+        End If
+        End If
+    Next
+    Total = Critical + High + Low + Medium
+    Worksheets("Alarm Summary").Range("B2").Value = Critical
+    Worksheets("Alarm Summary").Range("B3").Value = High
+    Worksheets("Alarm Summary").Range("B4").Value = Medium
+    Worksheets("Alarm Summary").Range("B5").Value = Low
+    Worksheets("Alarm Summary").Range("B6").Value = Total
+    End If
+    
+    Cells.Select
+    ActiveWorkbook.Worksheets("BBOG").Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("BBOG").Sort.SortFields.Add Key:=Range("C2:C" & RowCount _
+        ), SortOn:=xlSortOnValues, Order:=xlDescending, DataOption:=xlSortNormal
+    With ActiveWorkbook.Worksheets("BBOG").Sort
+        .SetRange Range("A1:C" & RowCount)
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    ThisWorkbook.Worksheets("BBOG").Columns("A:C").EntireColumn.AutoFit
+    'Worksheets("Alarm Summary").Range("B2").Select
+    Worksheets("Alarm Summary").Range("A20:A29").Value = Worksheets("BBOG").Range("A2:A11").Value
+    Worksheets("Alarm Summary").Range("M20:M29").Value = Worksheets("BBOG").Range("C2:C11").Value
+    Sheets("Alarm Summary").Select
+End Sub
+
