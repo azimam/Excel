@@ -1,0 +1,13 @@
+ub STCompare()
+
+For I = 1 To 1229
+
+    For J = 1 To 177
+        If InStr(1, Sheets("Sheet1").Range("A" & I).Value, Sheets("Sheet1").Range("B" & J).Value) <> 0 Then
+        Sheets("Sheet1").Range("A" & I).Interior.ColorIndex = 6   'Yellow
+        Sheets("Sheet1").Range("B" & J).Interior.ColorIndex = 6   'Yellow
+        End If
+    Next J
+ Next I
+
+End Sub
