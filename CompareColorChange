@@ -1,4 +1,4 @@
-ub STCompare()
+Sub STCompare()
 
 For I = 1 To 1229
 
