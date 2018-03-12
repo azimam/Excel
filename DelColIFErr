@@ -1,0 +1,18 @@
+Sub ErrDelete()
+'
+iColNumber = 1
+
+ While Not Worksheets("Sheet1").Cells(1, iColNumber) = ""
+     
+                If InStr(1, "Error", Worksheets("Sheet1").Cells(1, iColNumber)) <> 0 Then
+                  
+                   Cells(1, iColNumber).Select
+                   Application.CutCopyMode = False
+                   Selection.EntireColumn.Delete
+                End If
+        
+        
+           iColNumber = iColNumber + 1
+    Wend
+
+End Sub
